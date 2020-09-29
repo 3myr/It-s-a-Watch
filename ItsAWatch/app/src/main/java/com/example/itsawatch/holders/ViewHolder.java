@@ -1,5 +1,6 @@
 package com.example.itsawatch.holders;
 
+import android.text.method.ScrollingMovementMethod;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
@@ -67,18 +68,26 @@ public class ViewHolder extends RecyclerView.ViewHolder{
      */
     public String toEuDate(String date)
     {
-        String dateTmp = date.substring(0,date.indexOf("-"));
+        try
+        {
+            String dateTmp = date.substring(0,date.indexOf("-"));
 
-        String years = dateTmp;
-        //Log.i("ItemModel",years);
-        dateTmp = date.substring(date.indexOf("-")+1,date.lastIndexOf("-"));
-        String month = new DateFormatSymbols().getMonths()[Integer.parseInt(dateTmp)-1];
-        //Log.i("ItemModel",month);
-        dateTmp = date.substring(date.lastIndexOf("-")+1);
-        String day = dateTmp;
-        //Log.i("ItemModel",day);
+            String years = dateTmp;
+            //Log.i("ItemModel",years);
+            dateTmp = date.substring(date.indexOf("-")+1,date.lastIndexOf("-"));
+            String month = new DateFormatSymbols().getMonths()[Integer.parseInt(dateTmp)-1];
+            //Log.i("ItemModel",month);
+            dateTmp = date.substring(date.lastIndexOf("-")+1);
+            String day = dateTmp;
+            //Log.i("ItemModel",day);
 
-        return day+" "+month+" "+years;
+            return day+" "+month+" "+years;
+        }
+        catch (Exception e)
+        {
+            return null;
+        }
+
     }
 
     //

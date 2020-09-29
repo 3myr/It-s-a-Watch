@@ -21,19 +21,17 @@ import java.lang.ref.WeakReference;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
-public class TacheMovies extends AsyncTask<String, Movie, JSONObject> {
+public class TacheSeasons extends AsyncTask<String, Movie, JSONObject> {
 
     // ATTRIBUTS
 
-    private static final String TAG = "TacheMovies";
+    private static final String TAG = "TacheSeries";
     private static String API = BuildConfig.ApiKey;
     private final WeakReference<MainActivity> myActivity;
     private CardStackAdapter adapter;
     private CardStackLayoutManager manager;
     private String apiUrl;
-    private boolean gotMovie;
-
-    private AsyncTask task;
+    private boolean gotSerie;
 
 
     //
@@ -41,14 +39,13 @@ public class TacheMovies extends AsyncTask<String, Movie, JSONObject> {
 
     // CONSTRUCTEURS
 
-    public TacheMovies(MainActivity a, CardStackAdapter adapter, CardStackLayoutManager manager)
+    public TacheSeasons(MainActivity a, CardStackAdapter adapter, CardStackLayoutManager manager)
     {
         super();
         this.myActivity = new WeakReference<>(a);
         this.adapter = adapter;
         this.manager = manager;
-        this.gotMovie = false;
-        task = null;
+        this.gotSerie = false;
     }
 
     //
@@ -83,7 +80,7 @@ public class TacheMovies extends AsyncTask<String, Movie, JSONObject> {
 
         try
         {
-            Log.i("TacheMovies",apiUrl);
+            Log.i("TacheSeasons",apiUrl);
             url = new URL(apiUrl);
             urlConnection = (HttpURLConnection) url.openConnection();
             InputStream in = new BufferedInputStream(urlConnection.getInputStream());
@@ -103,7 +100,7 @@ public class TacheMovies extends AsyncTask<String, Movie, JSONObject> {
                 for(int i=0;i<desc.length();i++)
                 {
                     // Charge le nom du film
-                    String name = desc.getJSONObject(i).get("title")+"";
+                    String name = desc.getJSONObject(i).get("name")+"";
                     //Log.i("TacheNetflix",desc.getJSONObject(i).get("title")+"");
 
                     // Charge l'image du film
@@ -111,19 +108,17 @@ public class TacheMovies extends AsyncTask<String, Movie, JSONObject> {
 
                     if(!image.equals("null"))
                     {
-                        URL urlImage = new URL("https://image.tmdb.org/t/p/w500/"+image);Bitmap bmp = BitmapFactory.decodeStream(urlImage.openConnection().getInputStream());
+                        URL urlImage = new URL("https://image.tmdb.org/t/p/w500/"+image);
+                        Bitmap bmp = BitmapFactory.decodeStream(urlImage.openConnection().getInputStream());
                         //Log.i("TacheNetflix","https://image.tmdb.org/t/p/w500/"+desc.getJSONObject(i).get("poster_path")+"");
 
                         String summary = desc.getJSONObject(i).get("overview")+"";
-                        String date_release = desc.getJSONObject(i).get("release_date")+"";
+                        String date_release = desc.getJSONObject(i).get("first_air_date")+"";
 
-                        if(summary!=null && date_release!=null && bmp!=null)
-                        {
-                            // Creer un film
-                            Movie movie = new Movie(bmp,name,summary,date_release);
+                        // Creer un film
+                        Movie movie = new Movie(bmp,name,summary,date_release);
 
-                            publishProgress(movie);
-                        }
+                        publishProgress(movie);
                     }
                 }
 
@@ -151,7 +146,7 @@ public class TacheMovies extends AsyncTask<String, Movie, JSONObject> {
     @Override
     protected void onProgressUpdate(Movie... movies)
     {
-        this.gotMovie=true;
+        this.gotSerie = true;
 
         // Récupère la position de l'item affiché
         int position = manager.getTopPosition();
@@ -167,7 +162,7 @@ public class TacheMovies extends AsyncTask<String, Movie, JSONObject> {
 
         // Incremente le nombre de films affiché
         myActivity.get().incrementItem();
-  }
+    }
 
     /**
      *
@@ -175,16 +170,15 @@ public class TacheMovies extends AsyncTask<String, Movie, JSONObject> {
     @Override
     protected void onPostExecute(JSONObject j)
     {
-        if(!this.gotMovie && this.myActivity.get().getTags().getEndDate()>this.myActivity.get().getCurrentDateMovie())
-        {
+        if(!this.gotSerie && this.myActivity.get().getTags().getEndDate()>this.myActivity.get().getCurrentDateMovie()) {
             if(myActivity.get().getCurrentDateMovie()!=0)
             {
-                myActivity.get().setCurrentDateMovie(myActivity.get().getCurrentDateMovie()+1);
-                TaskManager.getInstace().ajouterTask(task = new TacheMovies(myActivity.get(),adapter,manager).execute("https://api.themoviedb.org/3/discover/movie?api_key="+API+"&language=fr-FR&sort_by=popularity.desc&include_adult=false"+myActivity.get().getTags().getTags()+"&primary_release_year="+myActivity.get().getCurrentDateMovie()+"&include_video=false&with_original_language=fr&page="+myActivity.get().getCurrentPage()));
+                myActivity.get().setCurrentDateMovie(myActivity.get().getCurrentDateMovie() + 1);
+                TaskManager.getInstace().ajouterTask(new TacheSeasons(myActivity.get(), adapter, manager).execute("https://api.themoviedb.org/3/discover/tv?api_key=" + API + "&language=fr-FR&sort_by=popularity.desc&include_adult=false" + myActivity.get().getTags().getTags() + "&first_air_date_year=" + myActivity.get().getCurrentDateMovie() + "&include_video=false&with_original_language=fr&page=" + myActivity.get().getCurrentPage()));
             }
             else
             {
-                TaskManager.getInstace().ajouterTask(task = new TacheMovies(myActivity.get(),adapter,manager).execute("https://api.themoviedb.org/3/discover/movie?api_key="+API+"&language=fr-FR&sort_by=popularity.desc&include_adult=false"+myActivity.get().getTags().getTags()+"&include_video=false&with_original_language=fr&page="+myActivity.get().getCurrentPage()));
+                TaskManager.getInstace().ajouterTask(new TacheSeasons(myActivity.get(), adapter, manager).execute("https://api.themoviedb.org/3/discover/tv?api_key=" + API + "&language=fr-FR&sort_by=popularity.desc&include_adult=false" + myActivity.get().getTags().getTags() + "&include_video=false&with_original_language=fr&page=" + myActivity.get().getCurrentPage()));
             }
         }
     }

@@ -4,16 +4,21 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 
 
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.view.animation.LinearInterpolator;
 
+import com.example.itsawatch.BuildConfig;
 import com.example.itsawatch.R;
 import com.example.itsawatch.adapters.CardStackAdapter;
 import com.example.itsawatch.modeles.Movie;
 import com.example.itsawatch.modeles.Preference;
+import com.example.itsawatch.modeles.Tags;
+import com.example.itsawatch.modeles.TaskManager;
 import com.example.itsawatch.taches.TacheMovies;
+import com.example.itsawatch.taches.TacheSeasons;
 import com.yuyakaido.android.cardstackview.CardStackLayoutManager;
 import com.yuyakaido.android.cardstackview.CardStackListener;
 import com.yuyakaido.android.cardstackview.CardStackView;
@@ -35,15 +40,70 @@ public class MainActivity extends AppCompatActivity {
     private CardStackAdapter adapter;
     private CardStackLayoutManager manager;
     private static final String TAG = "MainActivity";
-    private static String API = "4df3f5cbd01cc8041de28fdcb2a06703";
+    private static String API = BuildConfig.ApiKey;
 
     private int currentPage;
     private String totalPage;
+    private int currentDateMovie;
+    private Tags tags;
+
+    private int itemLoad;
+    private AsyncTask task;
 
     //
 
     // GETTER / SETTER
 
+    /**
+     *
+     * @return
+     */
+    public int getItemLoad() {
+        return itemLoad;
+    }
+
+    /**
+     *
+     */
+    public void incrementItem() {
+        this.itemLoad++;
+    }
+
+    /**
+     *
+     * @param currentDateMovie
+     */
+    public void setCurrentDateMovie(int currentDateMovie) {
+        if(currentDateMovie<=tags.getEndDate())
+        {
+            this.currentPage=1;
+            this.currentDateMovie = currentDateMovie;
+        }
+    }
+
+    /**
+     *
+     * @return
+     */
+    public Tags getTags() {
+        return tags;
+    }
+
+    /**
+     *
+     * @return
+     */
+    public int getCurrentPage() {
+        return currentPage;
+    }
+
+    /**
+     *
+     * @return
+     */
+    public int getCurrentDateMovie() {
+        return currentDateMovie;
+    }
 
     /**
      *
@@ -75,7 +135,23 @@ public class MainActivity extends AppCompatActivity {
         // Fixe la vue
         setContentView(R.layout.activity_main);
 
-        // TEST
+        // Récupère la classe Tags
+        Bundle extras = getIntent().getExtras();
+        if (extras != null) {
+            tags = (Tags)extras.get("tags");
+        }
+
+        // Initialise le nombre de films chargés
+        itemLoad = 0;
+
+        task = null;
+        //"+tags.getTags()+"&
+        //Log.i("MainActivity",tags.getTags());
+
+        // Affecte la date de départ des films à rechercher
+        currentDateMovie = tags.getStartDate();
+
+        // Initialisation
         mainActivity = this;
         currentPage=1;
 
@@ -106,7 +182,10 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onCardSwiped(Direction direction)
             {
-                Log.i(TAG,"Position : "+manager.getTopPosition()+"\tItemCount : "+adapter.getItemCount());
+                // Decremente le nombre de films affiché
+                itemLoad--;
+
+                //Log.i(TAG,"Position : "+manager.getTopPosition()+"\tItemCount : "+adapter.getItemCount());
                 // Si on swipe a droite, ajoute le film swapé dans la liste des films choisit
                 if(direction.equals(Direction.Right))
                 {
@@ -114,14 +193,83 @@ public class MainActivity extends AppCompatActivity {
                 }
 
                 // Quand on arrive vers la fin de la liste, charge une autre
-                if( (manager.getTopPosition() == adapter.getItemCount()-5) && totalPage!=null)
+                // Cas ou l'utilisateur selectionne une partie de films dans la base de donnée
+                if(currentDateMovie!=0)
                 {
-                    if(Integer.parseInt(totalPage)!=currentPage)
+                    if( (manager.getTopPosition() == adapter.getItemCount()) && totalPage!=null || itemLoad<30)
                     {
-                        currentPage++;
-                        new TacheMovies(mainActivity,adapter,manager).execute("https://api.themoviedb.org/3/discover/movie?api_key="+API+"&language=fr-FR&sort_by=popularity.desc&include_adult=false&include_video=false&with_original_language=fr&page="+currentPage);
+                        // Si on se situe dans la plage de date, on continue
+                        if(currentDateMovie<tags.getEndDate())
+                        {
+                            // Si le nombre de page totale est supérieur a la page visité, continue
+                            if(Integer.parseInt(totalPage)>currentPage )
+                            {
+                                currentPage++;
+                                if(tags.isMovies())
+                                {
+                                    TaskManager.getInstace().ajouterTask(new TacheMovies(mainActivity,adapter,manager).execute("https://api.themoviedb.org/3/discover/movie?api_key="+API+"&language=fr-FR&sort_by=popularity.desc&include_adult=false"+tags.getTags()+"&primary_release_year="+currentDateMovie+"&include_video=false&with_original_language=fr&page="+currentPage));
+
+                                }
+                                else
+                                {
+                                    TaskManager.getInstace().ajouterTask(new TacheSeasons(mainActivity,adapter,manager).execute("https://api.themoviedb.org/3/discover/tv?api_key="+API+"&language=fr-FR&sort_by=popularity.desc&include_adult=false"+tags.getTags()+"&first_air_date_year="+currentDateMovie+"&include_video=false&with_original_language=fr&page="+currentPage));
+                                }
+                            }
+                            else
+                            {
+                                currentPage=1;
+                                if(currentDateMovie!=0)
+                                {
+                                    currentDateMovie++;
+                                    if(tags.isMovies())
+                                    {
+                                        TaskManager.getInstace().ajouterTask(new TacheMovies(mainActivity,adapter,manager).execute("https://api.themoviedb.org/3/discover/movie?api_key="+API+"&language=fr-FR&sort_by=popularity.desc&include_adult=false"+tags.getTags()+"&primary_release_year="+currentDateMovie+"&include_video=false&with_original_language=fr&page="+currentPage));
+                                    }
+                                    else
+                                    {
+                                        TaskManager.getInstace().ajouterTask(new TacheSeasons(mainActivity,adapter,manager).execute("https://api.themoviedb.org/3/discover/tv?api_key="+API+"&language=fr-FR&sort_by=popularity.desc&include_adult=false"+tags.getTags()+"&first_air_date_year="+currentDateMovie+"&include_video=false&with_original_language=fr&page="+currentPage));
+                                    }
+                                }
+                            }
+                        }
+                        else
+                        {
+                            // Si le nombre de page totale est supérieur a la page visité, continue
+                            if(Integer.parseInt(totalPage)>currentPage )
+                            {
+                                currentPage++;
+                                if(tags.isMovies())
+                                {
+                                    TaskManager.getInstace().ajouterTask(new TacheMovies(mainActivity,adapter,manager).execute("https://api.themoviedb.org/3/discover/movie?api_key="+API+"&language=fr-FR&sort_by=popularity.desc&include_adult=false"+tags.getTags()+"&primary_release_year="+currentDateMovie+"&include_video=false&with_original_language=fr&page="+currentPage));
+
+                                }
+                                else
+                                {
+                                    TaskManager.getInstace().ajouterTask(new TacheSeasons(mainActivity,adapter,manager).execute("https://api.themoviedb.org/3/discover/tv?api_key="+API+"&language=fr-FR&sort_by=popularity.desc&include_adult=false"+tags.getTags()+"&first_air_date_year="+currentDateMovie+"&include_video=false&with_original_language=fr&page="+currentPage));
+                                }
+                            }
+                        }
                     }
                 }
+                else // Cas ou l'utilisateur selectionne tout les films dans la base de données
+                {
+                    if( (manager.getTopPosition() == adapter.getItemCount()) && totalPage!=null || itemLoad<30) {
+                        // Si le nombre de page totale est supérieur a la page visité, continue
+                        if (Integer.parseInt(totalPage) > currentPage) {
+                            currentPage++;
+                            if(tags.isMovies())
+                            {
+                                TaskManager.getInstace().ajouterTask(new TacheMovies(mainActivity, adapter, manager).execute("https://api.themoviedb.org/3/discover/movie?api_key=" + API + "&language=fr-FR&sort_by=popularity.desc&include_adult=false" + tags.getTags() + "&include_video=false&with_original_language=fr&page=" + currentPage));
+                            }
+                            else
+                            {
+                                TaskManager.getInstace().ajouterTask(new TacheSeasons(mainActivity, adapter, manager).execute("https://api.themoviedb.org/3/discover/tv?api_key=" + API + "&language=fr-FR&sort_by=popularity.desc&include_adult=false" + tags.getTags() + "&include_video=false&with_original_language=fr&page=" + currentPage));
+                            }
+                        }
+
+                    }
+                }
+
             }
 
             @Override
@@ -169,8 +317,38 @@ public class MainActivity extends AppCompatActivity {
         adapter.setManager(manager);
 
         // Lance la tache
-        new TacheMovies(this,adapter,manager).execute("https://api.themoviedb.org/3/discover/movie?api_key="+API+"&language=fr-FR&sort_by=popularity.desc&include_adult=false&include_video=false&with_original_language=fr&page=1");
+        //new TacheSeasons(this,adapter,manager).execute("https://api.themoviedb.org/3/discover/tv?api_key="+API+"&language=fr-FR&sort_by=popularity.desc&include_adult=false&include_video=false&with_original_language=de&page=1");
+        if(currentDateMovie!=0)
+        {
+            if(tags.isMovies())
+            {
+                TaskManager.getInstace().ajouterTask(new TacheMovies(this,adapter,manager).execute("https://api.themoviedb.org/3/discover/movie?api_key="+API+"&language=fr-FR&sort_by=popularity.desc&include_adult=false"+tags.getTags()+"&primary_release_year="+currentDateMovie+"&include_video=false&with_original_language=fr&page=1"));
+            }
+            else
+            {
+                TaskManager.getInstace().ajouterTask(new TacheSeasons(this,adapter,manager).execute("https://api.themoviedb.org/3/discover/tv?api_key="+API+"&language=fr-FR&sort_by=popularity.desc&include_adult=false"+tags.getTags()+"&first_air_date_year="+currentDateMovie+"&include_video=false&with_original_language=fr&page=1"));
+            }
+        }
+        else
+        {
+            if(tags.isMovies())
+            {
+                TaskManager.getInstace().ajouterTask(new TacheMovies(this, adapter, manager).execute("https://api.themoviedb.org/3/discover/movie?api_key=" + API + "&language=fr-FR&sort_by=popularity.desc&include_adult=false" + tags.getTags() + "&include_video=false&with_original_language=fr&page=1"));
+            }
+            else
+            {
+                TaskManager.getInstace().ajouterTask(new TacheSeasons(this, adapter, manager).execute("https://api.themoviedb.org/3/discover/tv?api_key=" + API + "&language=fr-FR&sort_by=popularity.desc&include_adult=false" + tags.getTags() + "&include_video=false&with_original_language=fr&page=1"));
+            }
+        }
     }
 
+    @Override
+    public void onBackPressed()
+    {
+        super.onBackPressed();
+
+        TaskManager.getInstace().cancelAllTask();
+        currentPage=1;
+    }
     //
 }
