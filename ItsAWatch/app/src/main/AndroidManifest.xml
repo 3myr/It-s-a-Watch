@@ -1,9 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.itsawatch">
+    xmlns:tools="http://schemas.android.com/tools"
+    package="com.example.ItsAWatch">
     <!-- Premissions -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.MANAGE_DOCUMENTS"
+        tools:ignore="ProtectedPermissions" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.CAMERA" />
+
+    <!-- Hardware -->
+    <uses-feature android:name="android.hardware.camera" android:required="true"/>
+    <uses-feature android:name="android.hardware.camera.autofocus" />
 
     <application
         android:allowBackup="true"
@@ -12,8 +21,8 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".activity.MainActivity"></activity>
-        <activity android:name=".activity.OptionActivity">
+        <activity android:name="com.example.ItsAWatch.activities.SwipeActivity"></activity>
+        <activity android:name="com.example.ItsAWatch.activities.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

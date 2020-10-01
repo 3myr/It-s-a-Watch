@@ -1,4 +1,4 @@
-package com.example.itsawatch.modeles;
+package com.example.ItsAWatch.modeles;
 
 import java.util.ArrayList;
 import java.util.List;

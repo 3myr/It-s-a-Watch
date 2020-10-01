@@ -1,22 +1,25 @@
-package com.example.itsawatch.taches;
+package com.example.ItsAWatch.taches;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.util.Log;
 
-import com.example.itsawatch.BuildConfig;
-import com.example.itsawatch.activity.MainActivity;
-import com.example.itsawatch.adapters.CardStackAdapter;
-import com.example.itsawatch.modeles.Movie;
-import com.example.itsawatch.modeles.TaskManager;
+import com.example.ItsAWatch.activities.SwipeActivity;
+import com.example.ItsAWatch.adapters.CardStackAdapter;
+import com.example.ItsAWatch.modeles.Movie;
+import com.example.ItsAWatch.modeles.TaskManager;
 import com.yuyakaido.android.cardstackview.CardStackLayoutManager;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.lang.ref.WeakReference;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -26,29 +29,28 @@ public class TacheMovies extends AsyncTask<String, Movie, JSONObject> {
     // ATTRIBUTS
 
     private static final String TAG = "TacheMovies";
-    private static String API = BuildConfig.ApiKey;
-    private final WeakReference<MainActivity> myActivity;
+    //private static String API = BuildConfig.ApiKey;
+    private final WeakReference<SwipeActivity> myActivity;
     private CardStackAdapter adapter;
     private CardStackLayoutManager manager;
-    private String apiUrl;
+    //private String apiUrl;
     private boolean gotMovie;
 
-    private AsyncTask task;
-
+    private boolean stop;
 
     //
 
 
     // CONSTRUCTEURS
 
-    public TacheMovies(MainActivity a, CardStackAdapter adapter, CardStackLayoutManager manager)
+    public TacheMovies(SwipeActivity a, CardStackAdapter adapter, CardStackLayoutManager manager)
     {
         super();
         this.myActivity = new WeakReference<>(a);
         this.adapter = adapter;
         this.manager = manager;
         this.gotMovie = false;
-        task = null;
+        stop = false;
     }
 
     //
@@ -75,7 +77,7 @@ public class TacheMovies extends AsyncTask<String, Movie, JSONObject> {
     @Override
     protected JSONObject doInBackground(String... urls) {
 
-        this.apiUrl = urls[0];
+        String apiUrl = urls[0];
 
         URL url = null;
         HttpURLConnection urlConnection = null;
@@ -99,8 +101,8 @@ public class TacheMovies extends AsyncTask<String, Movie, JSONObject> {
                 JSONArray desc = result.getJSONArray("results");
 
                 // Initialisation de la liste contenant les noms des films
-
-                for(int i=0;i<desc.length();i++)
+                int i=0;
+                while(i<desc.length() && !stop)
                 {
                     // Charge le nom du film
                     String name = desc.getJSONObject(i).get("title")+"";
@@ -111,13 +113,46 @@ public class TacheMovies extends AsyncTask<String, Movie, JSONObject> {
 
                     if(!image.equals("null"))
                     {
-                        URL urlImage = new URL("https://image.tmdb.org/t/p/w500/"+image);Bitmap bmp = BitmapFactory.decodeStream(urlImage.openConnection().getInputStream());
-                        //Log.i("TacheNetflix","https://image.tmdb.org/t/p/w500/"+desc.getJSONObject(i).get("poster_path")+"");
+                        Bitmap bmp=null;
+
+                        if(isCancelled())
+                        {
+                            stop = true;
+                        }
+                        else
+                        {
+                            URL urlImage=new URL("https://image.tmdb.org/t/p/w500/"+image);
+                            if(isCancelled())
+                            {
+                                stop = true;
+                            }
+                            else
+                            {
+                                urlImage.openConnection();
+                                if(isCancelled())
+                                {
+                                    stop = true;
+                                }
+                                else
+                                {
+                                    InputStream inputStream = urlImage.openConnection().getInputStream();
+                                    if(isCancelled())
+                                    {
+                                        stop = true;
+                                    }
+                                    else
+                                    {
+                                        bmp = BitmapFactory.decodeStream(inputStream);
+                                    }
+                                }
+                            }
+
+                        }
 
                         String summary = desc.getJSONObject(i).get("overview")+"";
                         String date_release = desc.getJSONObject(i).get("release_date")+"";
 
-                        if(summary!=null && date_release!=null && bmp!=null)
+                        if(summary!=null && date_release!=null)
                         {
                             // Creer un film
                             Movie movie = new Movie(bmp,name,summary,date_release);
@@ -125,6 +160,8 @@ public class TacheMovies extends AsyncTask<String, Movie, JSONObject> {
                             publishProgress(movie);
                         }
                     }
+
+                    i++;
                 }
 
             } catch (JSONException e) {
@@ -175,16 +212,26 @@ public class TacheMovies extends AsyncTask<String, Movie, JSONObject> {
     @Override
     protected void onPostExecute(JSONObject j)
     {
+        // Variables locale
+        String API = "4df3f5cbd01cc8041de28fdcb2a06703";
+
+        if(this.myActivity.get().getItemLoad()<20)
+        {
+            this.gotMovie=false;
+        }
+
         if(!this.gotMovie && this.myActivity.get().getTags().getEndDate()>this.myActivity.get().getCurrentDateMovie())
         {
             if(myActivity.get().getCurrentDateMovie()!=0)
             {
+                //Log.i("TacheMovies","je rentre dans dates\t"+myActivity.get().getCurrentDateMovie()+"\t"+this.myActivity.get().getTags().getEndDate());
                 myActivity.get().setCurrentDateMovie(myActivity.get().getCurrentDateMovie()+1);
-                TaskManager.getInstace().ajouterTask(task = new TacheMovies(myActivity.get(),adapter,manager).execute("https://api.themoviedb.org/3/discover/movie?api_key="+API+"&language=fr-FR&sort_by=popularity.desc&include_adult=false"+myActivity.get().getTags().getTags()+"&primary_release_year="+myActivity.get().getCurrentDateMovie()+"&include_video=false&with_original_language=fr&page="+myActivity.get().getCurrentPage()));
+                TaskManager.getInstace().ajouterTask(new TacheMovies(myActivity.get(),adapter,manager).execute("https://api.themoviedb.org/3/discover/movie?api_key="+API+"&language=fr-FR&sort_by=popularity.desc&include_adult=false"+myActivity.get().getTags().getTags()+"&primary_release_year="+myActivity.get().getCurrentDateMovie()+"&include_video=false&page="+myActivity.get().getCurrentPage()));
             }
             else
             {
-                TaskManager.getInstace().ajouterTask(task = new TacheMovies(myActivity.get(),adapter,manager).execute("https://api.themoviedb.org/3/discover/movie?api_key="+API+"&language=fr-FR&sort_by=popularity.desc&include_adult=false"+myActivity.get().getTags().getTags()+"&include_video=false&with_original_language=fr&page="+myActivity.get().getCurrentPage()));
+                //Log.i("TacheMovies","je rentre dans pas de dates");
+                TaskManager.getInstace().ajouterTask(new TacheMovies(myActivity.get(),adapter,manager).execute("https://api.themoviedb.org/3/discover/movie?api_key="+API+"&language=fr-FR&sort_by=popularity.desc&include_adult=false"+myActivity.get().getTags().getTags()+"&include_video=false&page="+myActivity.get().getCurrentPage()));
             }
         }
     }

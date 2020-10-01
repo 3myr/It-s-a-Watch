@@ -4,4 +4,9 @@
         <item>1950</item>
         <item>2020</item>
     </array>
+
+    <array name="media_array">
+        <item>Photo</item>
+        <item>Gallery</item>
+    </array>
 </resources>

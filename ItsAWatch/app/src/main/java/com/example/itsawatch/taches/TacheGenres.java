@@ -1,14 +1,14 @@
-package com.example.itsawatch.taches;
+package com.example.ItsAWatch.taches;
 
 import android.os.AsyncTask;
+import android.util.Log;
 import android.widget.CompoundButton;
 
-import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.Fragment;
 
-import com.example.itsawatch.R;
-import com.example.itsawatch.modeles.Genre;
-
-import com.example.itsawatch.modeles.Tags;
+import com.example.ItsAWatch.R;
+import com.example.ItsAWatch.modeles.Genre;
+import com.example.ItsAWatch.modeles.Tags;
 import com.google.android.flexbox.FlexboxLayout;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
@@ -31,8 +31,8 @@ public class TacheGenres extends AsyncTask<String, Genre, JSONObject> {
     // ATTRIBUTS
 
     private static final String TAG = "TacheGenres";
-    private final WeakReference<AppCompatActivity> myActivity;
-    private String apiUrl;
+    private final WeakReference<Fragment> myActivity;
+    //private String apiUrl;
     private ChipGroup chipGroup;
     private FlexboxLayout flexboxLayout;
 
@@ -44,7 +44,7 @@ public class TacheGenres extends AsyncTask<String, Genre, JSONObject> {
 
     // CONSTRUCTEURS
 
-    public TacheGenres(AppCompatActivity a, ChipGroup chipGroup, Tags tags)
+    public TacheGenres(Fragment a, ChipGroup chipGroup, Tags tags)
     {
         super();
         this.myActivity = new WeakReference<>(a);
@@ -52,7 +52,7 @@ public class TacheGenres extends AsyncTask<String, Genre, JSONObject> {
         this.tags = tags;
     }
 
-    public TacheGenres(AppCompatActivity a, FlexboxLayout flexboxLayout, Tags tags)
+    public TacheGenres(Fragment a, FlexboxLayout flexboxLayout, Tags tags)
     {
         super();
         this.myActivity = new WeakReference<>(a);
@@ -84,7 +84,7 @@ public class TacheGenres extends AsyncTask<String, Genre, JSONObject> {
     @Override
     protected JSONObject doInBackground(String... urls) {
 
-        this.apiUrl = urls[0];
+        String apiUrl = urls[0];
 
         URL url = null;
         HttpURLConnection urlConnection = null;
@@ -138,28 +138,43 @@ public class TacheGenres extends AsyncTask<String, Genre, JSONObject> {
     @Override
     protected void onProgressUpdate(final Genre... genres)
     {
-        final Chip chip = (Chip)myActivity.get().getLayoutInflater().inflate(R.layout.item_genres,null,false);
-        chip.setText(genres[0].getName());
-        flexboxLayout.addView(chip);
-        //chipGroup.addView(chip);
-
-        // Evenements quand l'utilisateur clique sur un Chip
-        chip.setOnCheckedChangeListener(new Chip.OnCheckedChangeListener()
+        try
         {
-            @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-                if(b)
-                {
-                    tags.ajouterTags(genres[0].getId());
-                    //Log.i("TacheGenres","Je suis selectionne : "+chip.getText());
-                }
-                else
-                {
-                    tags.supprimerTags(genres[0].getId());
-                    //Log.i("TacheGenres","Je ne suis plus selectionne : "+chip.getText());
-                }
+            final Chip chip = (Chip)myActivity.get().getLayoutInflater().inflate(R.layout.item_genres,null,false);
+            chip.setText(genres[0].getName());
+
+            // Si le tags est déjà sélectionné dans le modele, sélectionne l'éléments graphique
+            if(tags.getListTags().contains(genres[0].getId()))
+            {
+                chip.setChecked(true);
             }
-        });
+
+            flexboxLayout.addView(chip);
+
+            //chipGroup.addView(chip);
+
+            // Evenements quand l'utilisateur clique sur un Chip
+            chip.setOnCheckedChangeListener(new Chip.OnCheckedChangeListener()
+            {
+                @Override
+                public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                    if(b)
+                    {
+                        tags.ajouterTags(genres[0].getId());
+                        //Log.i("TacheGenres","Je suis selectionne : "+chip.getText());
+                    }
+                    else
+                    {
+                        tags.supprimerTags(genres[0].getId());
+                        //Log.i("TacheGenres","Je ne suis plus selectionne : "+chip.getText());
+                    }
+                }
+            });
+        }
+        catch (Exception e)
+        {
+            // Empeche l'application de planter quand l'utilisateur switch très rapidement de fragments
+        }
     }
 
     /**

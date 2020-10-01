@@ -1,3 +1,6 @@
 <resources>
-    <string name="app_name">It\'s a Watch</string>
+    <string name="app_name">ItsAWatch</string>
+    <string name="title_home">Home</string>
+    <string name="title_profile">Profile</string>
+    <string name="title_search">Search</string>
 </resources>

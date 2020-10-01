@@ -1,4 +1,4 @@
-package com.example.itsawatch.modeles;
+package com.example.ItsAWatch.modeles;
 
 
 import android.graphics.Bitmap;
@@ -11,6 +11,7 @@ public class Movie {
     private String name;
     private String summary;
     private String dateRelease;
+    private String url;
 
     //
 
@@ -29,6 +30,21 @@ public class Movie {
         this.name = name;
         this.summary = summary;
         this.dateRelease = dateRelease;
+    }
+
+    /**
+     *
+     * @param name
+     * @param summary
+     * @param dateRelease
+     * @param url
+     */
+    public Movie(String name, String summary, String dateRelease, String url)
+    {
+        this.name = name;
+        this.summary = summary;
+        this.dateRelease = dateRelease;
+        this.url = url;
     }
 
     //
@@ -65,6 +81,15 @@ public class Movie {
      */
     public String getDateRelease() {
         return dateRelease;
+    }
+
+    /**
+     *
+     * @return
+     */
+    public String getUrl()
+    {
+        return url;
     }
 
     //

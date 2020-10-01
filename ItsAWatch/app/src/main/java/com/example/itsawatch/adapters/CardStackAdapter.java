@@ -1,21 +1,20 @@
-package com.example.itsawatch.adapters;
+package com.example.ItsAWatch.adapters;
 
 import android.annotation.SuppressLint;
 import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
-
-import com.example.itsawatch.R;
-import com.example.itsawatch.holders.ViewHolder;
-import com.example.itsawatch.modeles.Movie;
-import com.yuyakaido.android.cardstackview.CardStackLayoutManager;
-
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.example.ItsAWatch.R;
+import com.example.ItsAWatch.holders.ViewHolder;
+import com.example.ItsAWatch.modeles.Movie;
+import com.yuyakaido.android.cardstackview.CardStackLayoutManager;
 
 import java.util.List;
 

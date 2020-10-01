@@ -1,15 +1,13 @@
-package com.example.itsawatch.holders;
+package com.example.ItsAWatch.holders;
 
-import android.text.method.ScrollingMovementMethod;
 import android.view.View;
 import android.widget.ImageView;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.itsawatch.R;
-import com.example.itsawatch.modeles.Movie;
+import com.example.ItsAWatch.R;
+import com.example.ItsAWatch.modeles.Movie;
 
 import java.text.DateFormatSymbols;
 
@@ -22,7 +20,6 @@ public class ViewHolder extends RecyclerView.ViewHolder{
     private TextView nameDetails;
     private TextView summaryText;
     private TextView dateReleaseText;
-    private RelativeLayout summary;
 
     //
 
@@ -34,7 +31,6 @@ public class ViewHolder extends RecyclerView.ViewHolder{
 
         image = (ImageView)itemView.findViewById(R.id.item_image);
         name = (TextView)itemView.findViewById(R.id.item_name);
-        summary = (RelativeLayout)itemView.findViewById(R.id.summary);
         nameDetails = (TextView)itemView.findViewById(R.id.name_details);
         summaryText = (TextView)itemView.findViewById(R.id.summary_text);
         dateReleaseText = (TextView)itemView.findViewById(R.id.date_release);
@@ -50,6 +46,7 @@ public class ViewHolder extends RecyclerView.ViewHolder{
      */
     public void updateWithModel(Movie movie)
     {
+        //Picasso.get().load(movie.getUrl()).into(this.image);
         this.image.setImageBitmap(movie.getImage());
         this.name.setText(movie.getName());
         this.nameDetails.setText(movie.getName());

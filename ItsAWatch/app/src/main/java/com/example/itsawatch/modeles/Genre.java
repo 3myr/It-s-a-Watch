@@ -1,7 +1,4 @@
-package com.example.itsawatch.modeles;
-
-import java.util.ArrayList;
-import java.util.List;
+package com.example.ItsAWatch.modeles;
 
 public class Genre {
 

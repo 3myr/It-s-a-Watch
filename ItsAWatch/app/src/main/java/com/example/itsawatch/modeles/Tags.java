@@ -1,4 +1,4 @@
-package com.example.itsawatch.modeles;
+package com.example.ItsAWatch.modeles;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -55,6 +55,15 @@ public class Tags implements Serializable {
 
     public void setEndDate(int endDate) {
         this.endDate = endDate;
+    }
+
+    /**
+     *
+     * @return
+     */
+    public List<String> getListTags()
+    {
+        return tags;
     }
 
     /**

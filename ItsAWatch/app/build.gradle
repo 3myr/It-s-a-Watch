@@ -5,7 +5,7 @@ android {
     buildToolsVersion "30.0.2"
 
     defaultConfig {
-        applicationId "com.example.itsawatch"
+        applicationId "com.example.ItsAWatch"
         minSdkVersion 23
         targetSdkVersion 30
         versionCode 1
@@ -15,13 +15,9 @@ android {
     }
 
     buildTypes {
-        debug {
-            buildConfigField 'String', "ApiKey", MyAwesomeApp_ApiKey
-        }
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            buildConfigField 'String', "ApiKey", MyAwesomeApp_ApiKey
         }
     }
 }
@@ -31,10 +27,13 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.2.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.0.1'
 
+    implementation 'androidx.navigation:navigation-fragment:2.1.0'
+    implementation 'androidx.navigation:navigation-ui:2.1.0'
     implementation 'androidx.recyclerview:recyclerview:1.1.0'
     implementation 'com.google.android.material:material:1.2.0-beta01'
     implementation 'com.yuyakaido.android:card-stack-view:2.3.4'
     implementation 'com.google.android:flexbox:2.0.1'
+    implementation 'androidx.preference:preference:1.1.0'
 
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'androidx.test.ext:junit:1.1.2'

@@ -1,11 +1,13 @@
-package com.example.itsawatch.modeles;
+package com.example.ItsAWatch.modeles;
 
 import android.os.AsyncTask;
-import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * OBSOLETE
+ */
 public class TaskManager {
 
     // ATTRIBUTS
@@ -73,7 +75,6 @@ public class TaskManager {
             {
                 //Log.i("TaskManager",async.getClass().getName());
                 // Empeche l'erreur de Thread
-                async.wait();
                 // Arrete la tache
                 async.cancel(true);
             }

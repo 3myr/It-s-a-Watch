@@ -1,4 +1,4 @@
-package com.example.itsawatch;
+package com.example.ItsAWatch;
 
 import org.junit.Test;
 
