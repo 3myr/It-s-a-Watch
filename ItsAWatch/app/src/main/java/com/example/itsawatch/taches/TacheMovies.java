@@ -33,8 +33,6 @@ public class TacheMovies extends AsyncTask<String, Movie, JSONObject> {
     private final WeakReference<SwipeActivity> myActivity;
     private CardStackAdapter adapter;
     private CardStackLayoutManager manager;
-    //private String apiUrl;
-    private boolean gotMovie;
 
     private boolean stop;
 
@@ -49,7 +47,6 @@ public class TacheMovies extends AsyncTask<String, Movie, JSONObject> {
         this.myActivity = new WeakReference<>(a);
         this.adapter = adapter;
         this.manager = manager;
-        this.gotMovie = false;
         stop = false;
     }
 
@@ -188,8 +185,6 @@ public class TacheMovies extends AsyncTask<String, Movie, JSONObject> {
     @Override
     protected void onProgressUpdate(Movie... movies)
     {
-        this.gotMovie=true;
-
         // Récupère la position de l'item affiché
         int position = manager.getTopPosition();
 
@@ -212,28 +207,7 @@ public class TacheMovies extends AsyncTask<String, Movie, JSONObject> {
     @Override
     protected void onPostExecute(JSONObject j)
     {
-        // Variables locale
-        String API = "4df3f5cbd01cc8041de28fdcb2a06703";
 
-        if(this.myActivity.get().getItemLoad()<20)
-        {
-            this.gotMovie=false;
-        }
-
-        if(!this.gotMovie && this.myActivity.get().getTags().getEndDate()>this.myActivity.get().getCurrentDateMovie())
-        {
-            if(myActivity.get().getCurrentDateMovie()!=0)
-            {
-                //Log.i("TacheMovies","je rentre dans dates\t"+myActivity.get().getCurrentDateMovie()+"\t"+this.myActivity.get().getTags().getEndDate());
-                myActivity.get().setCurrentDateMovie(myActivity.get().getCurrentDateMovie()+1);
-                TaskManager.getInstace().ajouterTask(new TacheMovies(myActivity.get(),adapter,manager).execute("https://api.themoviedb.org/3/discover/movie?api_key="+API+"&language=fr-FR&sort_by=popularity.desc&include_adult=false"+myActivity.get().getTags().getTags()+"&primary_release_year="+myActivity.get().getCurrentDateMovie()+"&include_video=false&page="+myActivity.get().getCurrentPage()));
-            }
-            else
-            {
-                //Log.i("TacheMovies","je rentre dans pas de dates");
-                TaskManager.getInstace().ajouterTask(new TacheMovies(myActivity.get(),adapter,manager).execute("https://api.themoviedb.org/3/discover/movie?api_key="+API+"&language=fr-FR&sort_by=popularity.desc&include_adult=false"+myActivity.get().getTags().getTags()+"&include_video=false&page="+myActivity.get().getCurrentPage()));
-            }
-        }
     }
 
     /**

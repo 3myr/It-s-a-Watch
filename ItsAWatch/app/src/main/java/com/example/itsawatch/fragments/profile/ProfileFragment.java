@@ -8,17 +8,18 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
-import android.util.Log;
+import android.provider.Settings;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import androidx.fragment.app.Fragment;
 
 import com.example.ItsAWatch.R;
 
-import java.io.File;
+
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -34,6 +35,19 @@ public class ProfileFragment extends Fragment {
 
     //
 
+    // CONSTRUCTEUR
+
+    /**
+     * Constructeur vide empechant une erreur de Fragment
+     * Unable to instantiate fragment com.example.ItsAWatch.fragments.xxxx.xxxxx: could not find Fragment constructor
+     */
+    public ProfileFragment()
+    {
+
+    }
+
+    //
+
     // GETTER / SETTER
 
 
@@ -46,10 +60,15 @@ public class ProfileFragment extends Fragment {
     {
         // Récupère les éléments graphiques
         imageView = view.findViewById(R.id.profile_photo);
+        TextView textView = view.findViewById(R.id.bluetooth_name);
+
+        // Récupère le nom bluetooth de l'appareil
+        textView.setText(Settings.Secure.getString(getActivity().getContentResolver(), "bluetooth_name"));
 
         // Récupération des informations de l'utilisateur
         FileInputStream fis=null;
-        try {
+        try
+        {
             fis = getActivity().openFileInput("image.data");
         } catch (FileNotFoundException e) {
             //e.printStackTrace();
@@ -65,6 +84,7 @@ public class ProfileFragment extends Fragment {
         imageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                // AlertDialog permettant de choisir entre la Caméra et la Gallery photos
                 AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
                 builder.setTitle("Choose a media loader")
                         .setItems(R.array.media_array, new DialogInterface.OnClickListener() {
@@ -94,7 +114,6 @@ public class ProfileFragment extends Fragment {
 
         @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_profile, container, false);
     }
 
@@ -102,6 +121,7 @@ public class ProfileFragment extends Fragment {
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
+        // Suivant le signal reçut, on récupère la photo et la fixe a l'imageView puis la photo est sauvegardé
         switch (requestCode)
         {
             case GALLERY:
@@ -113,13 +133,17 @@ public class ProfileFragment extends Fragment {
                         bitmap = BitmapFactory.decodeStream(getActivity().getContentResolver().openInputStream(targetUri));
 
                         // resize the image
-                        int scaleFactor = Math.min(bitmap.getWidth()/150, bitmap.getHeight()/150);
-                        Log.i("ProfileFragment",scaleFactor+"");
+                        int scaleFactor = Math.min(bitmap.getWidth()/300, bitmap.getHeight()/300);
 
                         Bitmap resized = Bitmap.createScaledBitmap(bitmap, bitmap.getWidth()/scaleFactor, bitmap.getHeight()/scaleFactor, true);
                         imageView.setImageBitmap(resized);
-                    } catch (FileNotFoundException e) {
-                        e.printStackTrace();
+
+                        FileOutputStream fos = getActivity().openFileOutput("image.data",getActivity().MODE_PRIVATE);
+                        resized.compress(Bitmap.CompressFormat.PNG,100,fos);
+                        fos.flush();
+                        fos.close();
+                    } catch (IOException i) {
+                        i.printStackTrace();
                     }
                 }
                 break;
@@ -136,13 +160,12 @@ public class ProfileFragment extends Fragment {
                         imageBitmap.compress(Bitmap.CompressFormat.PNG,100,fos);
                         imageView.setImageBitmap(imageBitmap);
                         fos.flush();
-                        File f = new File(System.getProperty("user.dir"),"image.data");
-                        Log.i("Profi",f.toString());
                         fos.close();
+                        //File f = new File(System.getProperty("user.dir"),"image.data");
                     }
                     catch (IOException i)
                     {
-
+                        i.printStackTrace();
                     }
                 }
                 break;

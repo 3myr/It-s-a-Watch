@@ -1,23 +1,38 @@
 package com.example.ItsAWatch.fragments.option;
 
+import android.database.DataSetObserver;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.RadioButton;
 import android.widget.RadioGroup;
+import android.widget.SpinnerAdapter;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 
 import com.example.ItsAWatch.R;
-import com.example.ItsAWatch.modeles.Tags;
+import com.example.ItsAWatch.modeles.Language;
+import com.example.ItsAWatch.modeles.Options;
+import com.example.ItsAWatch.modeles.Producteur;
 import com.example.ItsAWatch.taches.TacheGenres;
 import com.google.android.flexbox.FlexboxLayout;
 import com.google.android.material.chip.ChipGroup;
 import com.google.android.material.slider.RangeSlider;
+import com.toptoche.searchablespinnerlibrary.SearchableSpinner;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Calendar;
 
 public class OptionFragment extends Fragment {
@@ -31,16 +46,30 @@ public class OptionFragment extends Fragment {
     private AppCompatActivity activity;
     private Fragment fragment;
 
-
-    private Tags tags;
+    private Options options;
 
     //
 
     // CONSTRUCTEUR
 
-    public OptionFragment(Tags tags)
+    /**
+     * Constructeur empechant de générer une erreur d'instanciation
+     * Unable to instantiate fragment com.example.ItsAWatch.fragments.xxxx.xxxxx: could not find Fragment constructor
+     * @param options
+     * @return
+     */
+    public static OptionFragment newInstance(Options options)
     {
-        this.tags = tags;
+        Bundle args = new Bundle();
+        args.putSerializable("options", options);
+        OptionFragment o = new OptionFragment();
+        o.setArguments(args);
+        return o;
+    }
+
+    public OptionFragment()
+    {
+
     }
 
     //
@@ -59,8 +88,14 @@ public class OptionFragment extends Fragment {
         RadioGroup radioGroupDates;
         RadioGroup radioGroupTypes;
 
-        // Charge les noms des différents producteur
+        // Récupère la classe options
+        this.options = (Options)this.getArguments().getSerializable("options");
 
+        // Charge les noms des différents producteur
+        getProducteurs("jsons/tv_network_ids.json");
+
+        // Charge les differentes langue au format ISO 639-1
+        getLanguage("jsons/language.json");
 
         // Garde en mémoire le fragment
         this.fragment = this;
@@ -72,11 +107,32 @@ public class OptionFragment extends Fragment {
         radioGroupTypes = view.findViewById(R.id.radioGroup_types);
         radioGroupDates = view.findViewById(R.id.radioGroup_dates);
 
+        // TEST
+        SearchableSpinner searchableSpinner = view.findViewById(R.id.search_spinner);
+
+        ArrayAdapter<Language> adapter = new ArrayAdapter<>(getActivity(),android.R.layout.simple_list_item_1,options.getLanguagesList());
+
+        searchableSpinner.setAdapter(adapter);
+        searchableSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                Log.i("OptionFragment",options.getLanguagesList().get(i).getId()+"");
+                options.setLanguageSelected(options.getLanguagesList().get(i).getId());
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+
+            }
+        });
+
+        //
+
         // Permet d'intialiser la barre permettant de choisir un film parmit deux dates
-        if(tags.getStartDate()!=0) {
-            rangeSlider.setValueTo(tags.getEndDate());
-            rangeSlider.setValueFrom(tags.getStartDate());
-            rangeSlider.setValues((float) tags.getStartDate(), (float) tags.getEndDate());
+        if(options.getStartDate()!=0) {
+            rangeSlider.setValueTo(options.getEndDate());
+            rangeSlider.setValueFrom(options.getStartDate());
+            rangeSlider.setValues((float) options.getStartDate(), (float) options.getEndDate());
         }
         else
         {
@@ -85,36 +141,22 @@ public class OptionFragment extends Fragment {
             rangeSlider.setValues((float) 2000, (float) Calendar.getInstance().get(Calendar.YEAR));
         }
 
-        // Initialise les dates
-
-
-        /*
-        try {
-            FileOutputStream fos = getActivity().openFileOutput("rangeSlider.data", Context.MODE_PRIVATE);
-            fos.flush();
-            fos.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-         */
-
-
         // Fixe le type d'éléments a affiché
         radioGroupTypes.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(RadioGroup radioGroup, int i) {
                 switch (i) {
                     case R.id.radioButton_movies:
-                        tags.clear();
-                        tags.setMovies(true);
+                        options.clear();
+                        options.setMovies(true);
                         flexboxLayout.removeAllViews();
-                        new TacheGenres(fragment, flexboxLayout, tags).execute("https://api.themoviedb.org/3/genre/movie/list?api_key=" + API + "&language=fr-FR");
+                        new TacheGenres(fragment, flexboxLayout, options).execute("https://api.themoviedb.org/3/genre/movie/list?api_key=" + API + "&language=fr-FR");
                         break;
                     case R.id.radioButton_series:
-                        tags.clear();
-                        tags.setMovies(false);
+                        options.clear();
+                        options.setMovies(false);
                         flexboxLayout.removeAllViews();
-                        new TacheGenres(fragment, flexboxLayout, tags).execute("https://api.themoviedb.org/3/genre/tv/list?api_key=" + API + "&language=fr-FR");
+                        new TacheGenres(fragment, flexboxLayout, options).execute("https://api.themoviedb.org/3/genre/tv/list?api_key=" + API + "&language=fr-FR");
                         break;
                 }
             }
@@ -162,19 +204,18 @@ public class OptionFragment extends Fragment {
             public void onValueChange(@NonNull RangeSlider slider, float value, boolean fromUser) {
 
                 // Met a jour les valeurs des dates de films a chercher
-                tags.setStartDate((int) Math.round(slider.getValues().get(0)));
-                tags.setEndDate((int) Math.round(slider.getValues().get(1)));
+                options.setStartDate((int) Math.round(slider.getValues().get(0)));
+                options.setEndDate((int) Math.round(slider.getValues().get(1)));
                 //Log.i("OptionActivity",slider.getValues()+"");
             }
         });
 
         // Lance Async Task pour récupérer les genres
-        if (tags.isMovies()) {
-            new TacheGenres(this, flexboxLayout, tags).execute("https://api.themoviedb.org/3/genre/movie/list?api_key=" + API + "&language=fr-FR");
+        if (options.isMovies()) {
+            new TacheGenres(this, flexboxLayout, options).execute("https://api.themoviedb.org/3/genre/movie/list?api_key=" + API + "&language=fr-FR");
         } else {
-            new TacheGenres(this, flexboxLayout, tags).execute("https://api.themoviedb.org/3/genre/tv/list?api_key=" + API + "&language=fr-FR");
+            new TacheGenres(this, flexboxLayout, options).execute("https://api.themoviedb.org/3/genre/tv/list?api_key=" + API + "&language=fr-FR");
         }
-
 
     }
 
@@ -186,11 +227,76 @@ public class OptionFragment extends Fragment {
     }
 
     /**
-     * Charge le fichier contenant tout les producteurs
+     * Charge le fichier contenant tout les producteurs et les charge dans la classe option
      */
-    public void readJSON()
+    public void getProducteurs(String file)
     {
+        try
+        {
+            // Converti le string en JSON puis en extrait les données
+            JSONObject jsonObject = readJSON(file);
+            JSONArray jsonArray = jsonObject.getJSONArray("data");
+            for(int i=0;i<jsonArray.length();i++)
+            {
+                JSONObject object = jsonArray.getJSONObject(i);
+                options.ajouterProducteurs(new Producteur(object.get("id")+"",object.get("name")+""));
+                //Log.i("OptionFragment",object.get("id")+"\t"+object.get("name"));
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
 
+    /**
+     * Charge le fichier contenant tout les languages au format ISO 639-1 et les charge dans la classe option
+     */
+    public void getLanguage(String file)
+    {
+        try
+        {
+            // Converti le string en JSON puis en extrait les données
+            JSONObject jsonObject = readJSON(file);
+            JSONArray jsonArray = jsonObject.getJSONArray("data");
+            for(int i=0;i<jsonArray.length();i++)
+            {
+                JSONObject object = jsonArray.getJSONObject(i);
+                options.ajouterLanguage(new Language(object.get("code")+"",object.get("name")+""));
+                //Log.i("OptionFragment",object.get("code")+"\t"+object.get("name"));
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Permet de lire un fichier JSON
+     * @return
+     */
+    public JSONObject readJSON(String file)
+    {
+        JSONObject jsonObject=null;
+        try
+        {
+            // Lecture du json
+            InputStream is = getContext().getAssets().open(file);
+
+            int size = is.available();
+            byte[] buffer = new byte[size];
+
+            is.read(buffer);
+            is.close();
+
+            String json = new String(buffer, "UTF-8");
+
+            // Converti le string en JSON puis en extrait les données
+            jsonObject = new JSONObject(json);
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+
+        return jsonObject;
     }
 
     //

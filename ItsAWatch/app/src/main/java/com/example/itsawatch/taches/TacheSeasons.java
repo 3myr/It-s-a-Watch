@@ -33,8 +33,6 @@ public class TacheSeasons extends AsyncTask<String, Movie, JSONObject> {
     private final WeakReference<SwipeActivity> myActivity;
     private CardStackAdapter adapter;
     private CardStackLayoutManager manager;
-    //private String apiUrl;
-    private boolean gotSerie;
     private boolean stop;
 
 
@@ -49,7 +47,6 @@ public class TacheSeasons extends AsyncTask<String, Movie, JSONObject> {
         this.myActivity = new WeakReference<>(a);
         this.adapter = adapter;
         this.manager = manager;
-        this.gotSerie = false;
         this.stop = false;
     }
 
@@ -184,8 +181,6 @@ public class TacheSeasons extends AsyncTask<String, Movie, JSONObject> {
     @Override
     protected void onProgressUpdate(Movie... movies)
     {
-        this.gotSerie = true;
-
         // Récupère la position de l'item affiché
         int position = manager.getTopPosition();
 
@@ -208,25 +203,7 @@ public class TacheSeasons extends AsyncTask<String, Movie, JSONObject> {
     @Override
     protected void onPostExecute(JSONObject j)
     {
-        // Variable Locale
-        String API = "4df3f5cbd01cc8041de28fdcb2a06703";
 
-        if(this.myActivity.get().getItemLoad()<20)
-        {
-            this.gotSerie=false;
-        }
-
-        if(!this.gotSerie && this.myActivity.get().getTags().getEndDate()>this.myActivity.get().getCurrentDateMovie()) {
-            if(myActivity.get().getCurrentDateMovie()!=0)
-            {
-                myActivity.get().setCurrentDateMovie(myActivity.get().getCurrentDateMovie() + 1);
-                TaskManager.getInstace().ajouterTask(new TacheSeasons(myActivity.get(), adapter, manager).execute("https://api.themoviedb.org/3/discover/tv?api_key=" + API + "&language=fr-FR&sort_by=popularity.desc&include_adult=false" + myActivity.get().getTags().getTags() + "&first_air_date_year=" + myActivity.get().getCurrentDateMovie() + "&include_video=false&page=" + myActivity.get().getCurrentPage()));
-            }
-            else
-            {
-                TaskManager.getInstace().ajouterTask(new TacheSeasons(myActivity.get(), adapter, manager).execute("https://api.themoviedb.org/3/discover/tv?api_key=" + API + "&language=fr-FR&sort_by=popularity.desc&include_adult=false" + myActivity.get().getTags().getTags() + "&include_video=false&page=" + myActivity.get().getCurrentPage()));
-            }
-        }
     }
 
     /**

@@ -3,10 +3,11 @@ package com.example.ItsAWatch.activities;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
-import androidx.fragment.app.FragmentTransaction;
 import androidx.viewpager2.widget.ViewPager2;
 
+import android.bluetooth.BluetoothDevice;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
@@ -16,14 +17,14 @@ import com.example.ItsAWatch.R;
 import com.example.ItsAWatch.adapters.ViewPagerAdapter;
 import com.example.ItsAWatch.fragments.option.OptionFragment;
 import com.example.ItsAWatch.fragments.profile.ProfileFragment;
-import com.example.ItsAWatch.modeles.Tags;
+import com.example.ItsAWatch.modeles.Options;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 public class MainActivity extends AppCompatActivity {
 
     // ATTRIBUTS
 
-    private Tags tags;
+    private Options options;
     private Fragment profile;
     private Fragment option;
 
@@ -37,7 +38,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        tags = new Tags();
+        options = new Options();
 
         // Recupere les éléments graphique
         bottomNavigationView = findViewById(R.id.bottom_navigation);
@@ -76,7 +77,8 @@ public class MainActivity extends AppCompatActivity {
                     case R.id.navigation_search:
                         item.setChecked(false); // Ne fonctionne pas
                         Intent i = new Intent(getApplicationContext(),SwipeActivity.class);
-                        i.putExtra("tags",tags);
+                        //i.putExtra("options",options);
+                        i.putExtra("options",option.getArguments().getSerializable("options"));
                         startActivity(i);
                         bottomNavigationView.getMenu().findItem(R.id.navigation_search).setChecked(true);
                         break;
@@ -119,7 +121,8 @@ public class MainActivity extends AppCompatActivity {
         ViewPagerAdapter adapter = new ViewPagerAdapter(getSupportFragmentManager(), getLifecycle());
 
         profile =new ProfileFragment();
-        option =new OptionFragment(tags);
+        option = OptionFragment.newInstance(options);
+        //option =new OptionFragment(options);
 
         adapter.addFragment(profile);
         adapter.addFragment(option);

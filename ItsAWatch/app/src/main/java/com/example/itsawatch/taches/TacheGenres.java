@@ -1,14 +1,13 @@
 package com.example.ItsAWatch.taches;
 
 import android.os.AsyncTask;
-import android.util.Log;
 import android.widget.CompoundButton;
 
 import androidx.fragment.app.Fragment;
 
 import com.example.ItsAWatch.R;
 import com.example.ItsAWatch.modeles.Genre;
-import com.example.ItsAWatch.modeles.Tags;
+import com.example.ItsAWatch.modeles.Options;
 import com.google.android.flexbox.FlexboxLayout;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
@@ -36,7 +35,7 @@ public class TacheGenres extends AsyncTask<String, Genre, JSONObject> {
     private ChipGroup chipGroup;
     private FlexboxLayout flexboxLayout;
 
-    private Tags tags;
+    private Options options;
 
 
     //
@@ -44,20 +43,20 @@ public class TacheGenres extends AsyncTask<String, Genre, JSONObject> {
 
     // CONSTRUCTEURS
 
-    public TacheGenres(Fragment a, ChipGroup chipGroup, Tags tags)
+    public TacheGenres(Fragment a, ChipGroup chipGroup, Options options)
     {
         super();
         this.myActivity = new WeakReference<>(a);
         this.chipGroup = chipGroup;
-        this.tags = tags;
+        this.options = options;
     }
 
-    public TacheGenres(Fragment a, FlexboxLayout flexboxLayout, Tags tags)
+    public TacheGenres(Fragment a, FlexboxLayout flexboxLayout, Options options)
     {
         super();
         this.myActivity = new WeakReference<>(a);
         this.flexboxLayout = flexboxLayout;
-        this.tags = tags;
+        this.options = options;
     }
 
     //
@@ -143,8 +142,8 @@ public class TacheGenres extends AsyncTask<String, Genre, JSONObject> {
             final Chip chip = (Chip)myActivity.get().getLayoutInflater().inflate(R.layout.item_genres,null,false);
             chip.setText(genres[0].getName());
 
-            // Si le tags est déjà sélectionné dans le modele, sélectionne l'éléments graphique
-            if(tags.getListTags().contains(genres[0].getId()))
+            // Si le options est déjà sélectionné dans le modele, sélectionne l'éléments graphique
+            if(options.getListTags().contains(genres[0].getId()))
             {
                 chip.setChecked(true);
             }
@@ -160,12 +159,12 @@ public class TacheGenres extends AsyncTask<String, Genre, JSONObject> {
                 public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
                     if(b)
                     {
-                        tags.ajouterTags(genres[0].getId());
+                        options.ajouterTags(genres[0].getId());
                         //Log.i("TacheGenres","Je suis selectionne : "+chip.getText());
                     }
                     else
                     {
-                        tags.supprimerTags(genres[0].getId());
+                        options.supprimerTags(genres[0].getId());
                         //Log.i("TacheGenres","Je ne suis plus selectionne : "+chip.getText());
                     }
                 }
